@@ -1,4 +1,7 @@
-import java.util.Queue;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
+
+import java.util.LinkedList;
 
 public class BST<Key extends Comparable<Key>, Value> {
     private Node root;
@@ -7,11 +10,13 @@ public class BST<Key extends Comparable<Key>, Value> {
         private Value val;
         private Node left, right;
         private int N;
+        private int H;
 
-        public Node (Key key, Value val, int N) {
+        public Node (Key key, Value val, int N, int H) {
             this.key = key;
             this.val = val;
             this.N = N;
+            this.H = H;
         }
     }
     public int size(){
@@ -22,20 +27,29 @@ public class BST<Key extends Comparable<Key>, Value> {
         else return x.N;
     }
 
+    public int height(){
+        return height(root);
+    }
+    private int height(Node x){
+        if(x==null) return 0;
+        else return x.H;
+    }
 
     public void put(Key key, Value value) {
         root = put(root, key, value);
     }
     private Node put(Node x, Key key, Value value){
-        if(x==null) return new Node(key, value, 1);
+        if(x==null) {
+            return new Node(key, value, 1, 1);
+        }
         int cmp = key.compareTo(x.key);
         if (cmp>0) {x.right = put(x.right, key, value);}
         else if (cmp<0) {x.left = put(x.left, key, value);}
         else x.val = value;
         x.N = size(x.left) + size(x.right) + 1;
+        x.H = Math.max(height(x.left),height(x.right))+1;
         return x;
     }
-
 
     public Value get(Key key) {
         return get(root, key);
@@ -50,7 +64,7 @@ public class BST<Key extends Comparable<Key>, Value> {
 
     public boolean contains(Key key){
 
-        return false;
+        return get(key)!= null;
     }
 
     public Key min()
@@ -129,8 +143,8 @@ public class BST<Key extends Comparable<Key>, Value> {
         if(x==null) return 0;
         int cmp = key.compareTo(x.key);
         if(cmp<0) return rank(key, x.left);
-        else if(cmp>0) return rank(key, x.right)+x.left.N+1;
-        else return x.left.N;
+        else if(cmp>0) return rank(key, x.right)+size(x.left)+1;
+        else return size(x.left);
     }
 
     public void deleteMin()
@@ -174,39 +188,121 @@ public class BST<Key extends Comparable<Key>, Value> {
     }
     private Iterable<Key> keys(Key lo, Key hi)
     {
-        Deque<Key> deque= new Deque<>();
-        keys(root, deque, lo, hi);
-        return deque;
+        LinkedList<Key> queue= new LinkedList<>();
+        keys(root, queue, lo, hi);
+        return queue;
     }
 
-    private void keys(Node x, Deque<Key> deque, Key lo, Key hi)
+    private void keys(Node x, LinkedList<Key> deque, Key lo, Key hi)
     {
         if (x==null) return;
         int cmplo = lo.compareTo(x.key);
         int cmphi = hi.compareTo(x.key);
         if(cmplo<0) keys(x.left, deque, lo, hi);
-        if(cmphi>0) keys(x.right, deque, lo, hi);
         if(cmplo <=0 && cmphi >=0) deque.addLast(x.key);
+        if(cmphi>0) keys(x.right, deque, lo, hi);
     }
-//    public boolean isEmpty() {
-//        return false;
+//Certification:
+    private boolean isSizeConsistent(){
+        return isSizeConsistent(root);
+    }
+    private boolean isSizeConsistent(Node x){
+        if(x==null) return true;
+        if(size(x.left) + size(x.right) + 1 != x.N) return false;
+        return isSizeConsistent(x.left) && isSizeConsistent(x.right);
+
+    }
+
+    private boolean hasNoDuplicates(Node x){
+        if(x==null) return true;
+        if (get(x.left, x.key) != null) return false;
+        if (get(x.right, x.key) != null) return false;
+        return hasNoDuplicates(x.left) && hasNoDuplicates(x.right);
+    }
+
+    private boolean isOrdered(){
+        return isOrdered(root, null, null);
+    }
+    private boolean isOrdered(Node x, Key min, Key max){
+        if(x == null) return true;
+        if (min!=null && x.key.compareTo(min)<=0) return false;
+        if (max!=null && x.key.compareTo(max)>=0) return false;
+        return isOrdered(x.left, min, x.key) && isOrdered(x.right, x.key, max);
+    }
+
+    private boolean isBST(){
+        if (!isSizeConsistent()) return false;
+        if(!hasNoDuplicates(root)) return false;
+        return isOrdered();
+    }
+
+    private boolean isRankConsistent(){
+        for(int i=0;i<size();i++){
+            if(i != rank(select(i) )) return false;
+        }
+        for(Key key:keys()){
+            if( key != select(rank(key))) return false;
+        }
+        return true;
+    }
+
+//    public int height()
+//    {
+//        return height(root);
 //    }
-//
-//
-//
-//    @Override
-//    public Iterable keys() {
-//        return null;
+//    private int height(Node x)
+//    {
+//        int lh;
+//        int rh;
+//        if( x.left == null && x.right ==null) return 1;
+//        if(x.left==null) lh = 0;
+//        else lh=height(x.left)+1;
+//        if(x.right==null) rh = 0;
+//        else rh=height(x.right)+1;
+//        return Math.max(lh, rh);
 //    }
+
+
+    public static void main(String[] args)
+    {
+//        BST<String, Integer> bst = new BST<>();
+//        for(int i=0; !StdIn.isEmpty(); i++)
+//        {
+//            String key = StdIn.readString();
+//            bst.put(key, i);
+//        }
 //
-//    @Override
-//    public int rank(Object o) {
-//        return 0;
-//    }
-//
-//    @Override
-//    public Object select(int k) {
-//        return null;
-//    }
+//        for(String s: bst.keys())
+//        {
+//            StdOut.println(s + " " + bst.get(s));
+//        }
+        BST<String, Integer> bst = new BST<>();
+        String test = "EASYQUESTION";
+        char[] cl = test.toCharArray();
+        for(int i=0; i<cl.length;i++)
+        {
+            String s = Character.toString( cl[i] );
+            bst.put(s, i);
+        }
+
+        System.out.println("keys: ");
+        for(String s :bst.keys())
+        {
+            StdOut.println(s);
+        }
+        System.out.println("Height: ");
+        System.out.println(bst.height());
+
+        bst.delete("S");
+        System.out.println("After delete: ");
+        for(String s :bst.keys())
+        {
+            StdOut.println(s);
+        }
+        System.out.println("Height: ");
+        System.out.println(bst.height());
+
+        System.out.println(bst.isBST());
+    }
 
 }

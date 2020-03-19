@@ -3,7 +3,7 @@ import java.util.Iterator;
 
 
 public class Deque<Item> implements Iterable<Item> {
-	private int size;
+	public int size;
 	private Node first;
 	private Node last;
 	
@@ -125,7 +125,18 @@ public class Deque<Item> implements Iterable<Item> {
     // unit testing (required)
     public static void main(String[] args){
 	// unit testing completed otherwhere.
+		Deque<String> d = new Deque<>();
+		String test = "EASYQUESTION";
+		char[] cl = test.toCharArray();
+		for (char c : cl) {
+			String s = Character.toString(c);
+			d.addLast(s);
+		}
 
+		for(int i=0;i<12;i++)
+		{
+			System.out.println(d.removeFirst());
+		}
 	}
 
 }
